@@ -1,7 +1,6 @@
 #!/bin/bash
-
-#依赖命令 curl busybox(tr cat sed) tesseract
-#apt-get install -y tesseract-ocr libtesseract-dev libleptonica-dev curl
+#dependency : curl busybox(tr sed grep cat) tesseract
+#apt install curl tesseract
 
 ua='Mozilla/5.0 (Linux; Android 7.1.2; ONEPLUS A5010 Build/NJH47F; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.139 Mobile Safari/537.36'
 
@@ -52,15 +51,22 @@ curl -s -A "$ua" -k "https://rarbgprx.org/threat_captcha.php?cid=$img_id&r=$r3" 
 
 echo "已获取验证码,开始识别";
 
-tesseract img.png test
+tesseract img.png test >/dev/null 2>&1
 
-password=$(cat test|tr -cd [A-Za-z0-9])
+password=$(cat test.txt|tr -cd [A-Za-z0-9])
 
 echo "提交验证码 $password";
 
-curl -s -A "$ua" -k -L "https://rarbgprx.org/threat_defence.php?defence=2&sk=$value_sk&cid=$value_c&i=$value_i&ref_cookie=rarbgprx.org&r=$r4&solve_string=$password&captcha_id=$captcha_id&submitted_bot_captcha=1" -H "Referer: https://rarbgprx.org/threat_defence.php?defence=2&sk=$value_sk&cid=$value_c&i=$value_i&ref_cookie=rarbgprx.org&r=$r2" -H "Connection: keep-alive" -b "sk=$value_sk" -c rarbg.cookie
+curl -s -A "$ua" -k -L "https://rarbgprx.org/threat_defence.php?defence=2&sk=$value_sk&cid=$value_c&i=$value_i&ref_cookie=rarbgprx.org&r=$r4&solve_string=$password&captcha_id=$captcha_id&submitted_bot_captcha=1" -H "Referer: https://rarbgprx.org/threat_defence.php?defence=2&sk=$value_sk&cid=$value_c&i=$value_i&ref_cookie=rarbgprx.org&r=$r2" -H "Connection: keep-alive" -b "sk=$value_sk" -c rarbg.cookie >/dev/null
 
-cat rarbg.cookie
+cookie=$(cat rarbg.cookie |grep 'skt'|sed 's/.*skt//g'|sed -n 1p|tr -cd '[0-9a-zA-Z]')
+
+if [[ $cookie == "" ]];then
+echo 获取cookie失败
+else 
+echo 获取cookie成功,cookie: stk=$cookie
+fi
+
 exit
 }
 
